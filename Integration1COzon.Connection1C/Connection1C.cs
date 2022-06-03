@@ -45,7 +45,7 @@ namespace Integration1COzon.Connection1C
             List<Connect1CData> listProd = new List<Connect1CData>();
             while (respBd.Следующий)
             {
-                listProd.Add(new Connect1CData { Article = respBd.Номенклатура.Артикул, Name = respBd.Номенклатура.Наименование, Storage = respBd.СтруктурнаяЕдиница, Count = respBd.КоличествоКонечныйОстаток });
+                listProd.Add(new Connect1CData { Article = respBd.НоменклатураАртикул, Storage = respBd.СтруктурнаяЕдиница.Наименование, Count = respBd.КоличествоКонечныйОстаток.ToString() });
             }
             return listProd;
         }

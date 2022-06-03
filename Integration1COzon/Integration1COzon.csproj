@@ -4,4 +4,10 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Integration1COzon.Application\Integration1COzon.Application.csproj" />
+    <ProjectReference Include="..\Integration1COzon.Connection1C\Integration1COzon.Connection1C.csproj" />
+    <ProjectReference Include="..\Integration1COzon.Ozon\Integration1COzon.Ozon.csproj" />
+  </ItemGroup>
+
 </Project>

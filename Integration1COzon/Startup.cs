@@ -1,13 +1,12 @@
+using Integration1COzon.Application;
+using Integration1COzon.Connection1C;
+using Integration1COzon.Ozon;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Integration1COzon
 {
@@ -24,6 +23,9 @@ namespace Integration1COzon
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            services.AddInfrastructureHandler();
+            services.AddInfrastructureOzon();
+            services.AddInfrastructureConnection1C();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,6 +53,14 @@ namespace Integration1COzon
             {
                 endpoints.MapRazorPages();
             });
+
+            #region [WorkBehind]
+            app.UseIntegration(integrationHandler =>
+            {
+                integrationHandler.Handle();
+            });
+
+            #endregion
         }
     }
 }

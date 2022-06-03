@@ -1,5 +1,7 @@
 ﻿using Integration1COzon.Application.Abstractions;
+using Integration1COzon.Application.Abstractions.Ozon;
 using Integration1COzon.Application.Handler;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration1COzon.Application

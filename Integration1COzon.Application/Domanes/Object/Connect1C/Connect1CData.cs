@@ -6,7 +6,6 @@
     public class Connect1CData
     {
         public string Article { get; set; }
-        public string Name { get; set; }
         public string Storage { get; set; }
         public string Count { get; set; }
     }

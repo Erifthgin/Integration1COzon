@@ -3,7 +3,7 @@
 namespace Integration1COzon.Application.Domanes.Enum
 {
     /// <summary>
-    /// Список складов
+    /// Список складов с 1С
     /// </summary>
     public enum StorageType
     {
