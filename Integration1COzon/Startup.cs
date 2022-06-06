@@ -55,10 +55,10 @@ namespace Integration1COzon
             });
 
             #region [WorkBehind]
-            app.UseIntegration(integrationHandler =>
-            {
-                integrationHandler.Handle();
-            });
+            //app.UseIntegration(integrationHandler =>
+            //{
+            //    integrationHandler.Handle();
+            //});
 
             #endregion
         }

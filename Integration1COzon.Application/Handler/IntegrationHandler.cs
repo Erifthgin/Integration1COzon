@@ -2,15 +2,16 @@
 using Integration1COzon.Application.Abstractions.Connection1C;
 using Integration1COzon.Application.Abstractions.Ozon;
 using Integration1COzon.Application.Domanes.Enum;
+using Integration1COzon.Application.Domanes.Object;
 using Integration1COzon.Application.Domanes.Requests.Ozon;
 using Integration1COzon.Application.Domanes.Responses.Ozon;
 using Integration1COzon.Application.Handler.JsonHandlers;
 using Integration1COzon.Application.Requests;
 
 using RestSharp;
-using Excel = Microsoft.Office.Interop.Excel;
 
 using System;
+using System.Collections.Generic;
 
 namespace Integration1COzon.Application.Handler
 {
@@ -19,7 +20,21 @@ namespace Integration1COzon.Application.Handler
     /// </summary>
     public class IntegrationHandler : IIntegrationHandler
     {
-       
+        private readonly string _nameServer = "";
+        private readonly string _nameDb = "";
+        private readonly string _user = "";
+        private readonly string _password = "";
+
+        private readonly string _apiKey = "";
+        private readonly string _apiClientId = "";
+        private readonly string _host = "";
+        private readonly ISingleMessageHandler<ProductStocksByWarehouseFbsResponse> _getProductStocksByWarehouse;
+        private readonly ISingleMessageHandler<GetWarehouseListResponse> _getWarehouseListResponse;
+        private readonly ISingleMessageHandler<GetProductInfoResopnse> _getProductInfoResopnse;
+        private readonly IConnection1C _connection1c;
+
+        private RequestArranger _requestArranger;
+        private readonly RestClient _client;
 
         public IntegrationHandler(IOzonHandlerFactory ozonFactory, IConnection1C connection1c)
         {
@@ -27,6 +42,7 @@ namespace Integration1COzon.Application.Handler
             _getProductInfoResopnse = ozonFactory.CreateGetProductInfoResopnse();
             _getProductStocksByWarehouse = ozonFactory.CreateProductStocksByWarehouseFbsResponse();
             _connection1c = connection1c;
+             _requestArranger = new RequestArranger(_apiKey, _apiClientId,_host);
         }
 
         public void Handle()
@@ -41,21 +57,6 @@ namespace Integration1COzon.Application.Handler
                     continue;
                 }
                 var respProductStocks = _getProductStocksByWarehouse.HandleSingle(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
-                //Объявляем приложение
-                Excel.Application ex = new Microsoft.Office.Interop.Excel.Application();
-                //Отобразить Excel
-                ex.Visible = true;
-                //Количество листов в рабочей книге
-                ex.SheetsInNewWorkbook = 2;
-                //Добавить рабочую книгу
-                Excel.Workbook workBook = ex.Workbooks.Add(Type.Missing);
-                //Отключить отображение окон с сообщениями
-                ex.DisplayAlerts = false;
-                //Получаем первый лист документа (счет начинается с 1)
-                Excel.Worksheet sheet = (Excel.Worksheet)ex.Worksheets.get_Item(1);
-                //Название листа (вкладки снизу)
-                sheet.Name = "Отчет за 13.12.2017";
-                int i = 1;
                 foreach (var items in respProductStocks.Result)
                 {
                     try
@@ -66,39 +67,47 @@ namespace Integration1COzon.Application.Handler
                         }
                         if (items.WarehouseName.Contains("Полигонная"))
                         {
-                            sheet.Cells[i, 1] = String.Format(item.Article, i, 1);
-                            sheet.Cells[i, 2] = String.Format(item.Storage, i, 2);
-                            sheet.Cells[i, 3] = String.Format(item.Count, i, 3);
-                            sheet.Cells[i, 4] = String.Format(items.Present.ToString(), i, 4);
-                            sheet.Cells[i, 5] = String.Format(items.FbsSku.ToString(), i, 5);
-                            i++;
                             Console.WriteLine(item.Article + " Название склада " + item.Storage + " Количество на складе " + item.Count + "  СкладОзон  " + items.Present);
                         }
                     }
                     catch { }
                 }
-                //Захватываем диапазон ячеек
-                Excel.Range range1 = sheet.get_Range(sheet.Cells[1, 1], sheet.Cells[9, 9]);
-                //Шрифт для диапазона
-                range1.Cells.Font.Name = "Tahoma";
-                //Размер шрифта для диапазона
-                range1.Cells.Font.Size = 10;
-                //Захватываем другой диапазон ячеек
-                Excel.Range range2 = sheet.get_Range(sheet.Cells[1, 1], sheet.Cells[9, 2]);
-                range2.Cells.Font.Name = "Times New Roman";
-                ex.Application.ActiveWorkbook.SaveAs("doc.xlsx", Type.Missing,
-                Type.Missing, Type.Missing, Type.Missing, Type.Missing, Excel.XlSaveAsAccessMode.xlNoChange,
-                Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
             }
+        }
 
-            //var respWarehouse = _getWarehouseListResponse.HandleSingle(SendTest(new GetWarehouseListRequest()));
-            //var respProductInfo = _getProductInfoResopnse.HandleSingle(SendTest(new GetProductInfoRequest(arcticleProduct)));
-            //var respProductStocks = _getProductStocksByWarehouse.HandleSingle(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
-
-            //var test = SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku));
-            //var fromserver = "Srvr=\"localhost\";Ref=\"SmallBisness\";Usr=\"ХимичОА\";Pwd=\"276555\"";
-
-            //throw new NotImplementedException();
+        public List<IntegrationData> Handle(StorageType storageType)
+        {
+            _connection1c.Connect1C(_nameServer, _nameDb, _user, _password);
+            var listProd = _connection1c.Get(storageType);
+            var list = new List<IntegrationData>();
+            foreach (var item in listProd)
+            {
+                var respProductInfo = _getProductInfoResopnse.HandleSingle(SendTest(new GetProductInfoRequest(item.Article)));
+                if (respProductInfo.Result == null)
+                {
+                    list.Add(new IntegrationData { Article=item.Article,Storage=item.Storage,Count1C=item.Count});
+                    continue;
+                }
+                var respProductStocks = _getProductStocksByWarehouse.HandleSingle(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
+                foreach (var items in respProductStocks.Result)
+                {
+                    try
+                    {
+                        if (respProductStocks.Result == null)
+                        {
+                            list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count});
+                            continue;
+                        }
+                        if (items.WarehouseName.Contains("Полигонная"))
+                        {
+                            list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count,Name= respProductInfo.Result.Name,CountOzon=items.Present });
+                            //Console.WriteLine(item.Article + " Название склада " + item.Storage + " Количество на складе " + item.Count + "  СкладОзон  " + items.Present);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            return list;
         }
 
         private string SendTest(AuthRequest payload)

@@ -24,7 +24,7 @@ namespace Integration1COzon.Connection1C
                 MaxConnections = 2
             };
             var fromserver = "Srvr=\"" + nameServer + "\";Ref=\"" + nameDb + "\";Usr=\"" + user + "\";Pwd=\"" + password + "\"";
-            connection = connector.Connect(fromserver);
+            //connection = connector.Connect(fromserver);
         }
 
         public List<Connect1CData> Get(StorageType storageType)

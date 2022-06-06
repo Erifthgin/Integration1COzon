@@ -1,6 +1,5 @@
 ﻿using Integration1COzon.Application.Domanes.Enum;
 using Integration1COzon.Application.Domanes.Object.Connect1C;
-
 using System.Collections.Generic;
 
 namespace Integration1COzon.Application.Abstractions.Connection1C
