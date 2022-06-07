@@ -12,6 +12,7 @@ using RestSharp;
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Integration1COzon.Application.Handler
 {
@@ -34,7 +35,7 @@ namespace Integration1COzon.Application.Handler
         private readonly IConnection1C _connection1c;
 
         private RequestArranger _requestArranger;
-        private readonly RestClient _client;
+        private readonly RestClient _client=new RestClient("https://api-seller.ozon.ru");
 
         public IntegrationHandler(IOzonHandlerFactory ozonFactory, IConnection1C connection1c)
         {
@@ -101,6 +102,12 @@ namespace Integration1COzon.Application.Handler
                         if (items.WarehouseName.Contains("Полигонная"))
                         {
                             list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count,Name= respProductInfo.Result.Name,CountOzon=items.Present });
+                            //try
+                            //{
+                            //    var updateProd = SendTest(new UpdateProductsStocksRequest(respProductInfo.Result.Offerid, items.ProductId, item.Count, items.WarehouseId));
+                            //    Thread.Sleep(800);
+                            //}
+                            //catch { }
                             //Console.WriteLine(item.Article + " Название склада " + item.Storage + " Количество на складе " + item.Count + "  СкладОзон  " + items.Present);
                         }
                     }

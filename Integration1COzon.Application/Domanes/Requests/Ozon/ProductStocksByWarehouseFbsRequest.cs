@@ -8,7 +8,7 @@ namespace Integration1COzon.Application.Domanes.Requests.Ozon
     /// <summary>
     /// Запрос на получение остатков со склада по выбранному товару
     /// </summary>
-    class ProductStocksByWarehouseFbsRequest : AuthRequest
+    public class ProductStocksByWarehouseFbsRequest : AuthRequest
     {
         public ProductStocksByWarehouseFbsRequest(string fbs_sku)
         {

@@ -23,7 +23,7 @@ namespace Integration1COzon.Application.Domanes.Responses.Ozon
         [JsonProperty("fbs_sku")]
         public int FbsSku { get; set; }
         [JsonProperty("warehouse_id")]
-        public object WarehouseId { get; set; }
+        public string WarehouseId { get; set; }
         [JsonProperty("warehouse_name")]
         public string WarehouseName { get; set; }
     }
