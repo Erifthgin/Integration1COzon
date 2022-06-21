@@ -4,7 +4,9 @@ using Integration1COzon.Application.Domanes.Object.Connect1C;
 using Integration1COzon.Application.Helpers;
 
 using System.Collections.Generic;
-
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using V83;
 
 namespace Integration1COzon.Connection1C
@@ -32,21 +34,38 @@ namespace Integration1COzon.Connection1C
             dynamic reqBd = connection.NewObject("Запрос");
             reqBd.Текст = $@"
             ВЫБРАТЬ
-	            ЗапасыНаСкладахОстаткиИОбороты.Номенклатура.Артикул,
-	            ЗапасыНаСкладахОстаткиИОбороты.СтруктурнаяЕдиница,
-	            ЗапасыНаСкладахОстаткиИОбороты.КоличествоКонечныйОстаток
+                СправочникНоменклатура.Ссылка.Наименование,
+                СправочникНоменклатура.Ссылка.Артикул,  
+                ТоварыНаСкладахОстатки.СтруктурнаяЕдиница.Наименование КАК Склад,
+                ЕСТЬNULL(ТоварыНаСкладахОстатки.КоличествоКонечныйОстаток, ""0.00"") КАК КоличествоОстаток
             ИЗ
-	            РегистрНакопления.ЗапасыНаСкладах.ОстаткиИОбороты(, , Авто, Движения, ) КАК ЗапасыНаСкладахОстаткиИОбороты
+                Справочник.Номенклатура КАК СправочникНоменклатура
+                    ЛЕВОЕ СОЕДИНЕНИЕ РегистрНакопления.ЗапасыНаСкладах.ОстаткиИОбороты(, , Авто, Движения, ) КАК ТоварыНаСкладахОстатки
+                    ПО(ТоварыНаСкладахОстатки.Номенклатура = СправочникНоменклатура.Ссылка)
+                    ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.ЦеныНоменклатуры.СрезПоследних КАК ЦеныНоменклатурыСрезПоследних
+                    ПО(ЦеныНоменклатурыСрезПоследних.Номенклатура = СправочникНоменклатура.Ссылка)
             ГДЕ
-	            СтруктурнаяЕдиница.Наименование = ""{EnumHelpers.GetEnumMemberAttributeValue(storageType)}""
+                Родитель.Родитель.Наименование = ""ИНСтрумеНТЫ дЛя ЮвеЛИРов"" ИЛИ
+                Родитель.Родитель.Родитель.Наименование = ""ИНСтрумеНТЫ дЛя ЮвеЛИРов"" ИЛИ
+                Родитель.Родитель.Родитель.Родитель.Наименование = ""ИНСтрумеНТЫ дЛя ЮвеЛИРов"" ИЛИ
+                Родитель.Родитель.Наименование = ""КАМНИ для ювелирных изделий"" ИЛИ
+                Родитель.Родитель.Родитель.Наименование = ""КАМНИ для ювелирных изделий"" И
+                Склад = ""{ EnumHelpers.GetEnumMemberAttributeValue(storageType)}""
             ";
 
             var respBd = reqBd.Выполнить().Выбрать();
+            Marshal.Release(Marshal.GetIDispatchForObject(respBd));
+
             List<Connect1CData> listProd = new List<Connect1CData>();
             while (respBd.Следующий)
             {
-                listProd.Add(new Connect1CData { Article = respBd.НоменклатураАртикул, Storage = respBd.СтруктурнаяЕдиница.Наименование, Count = respBd.КоличествоКонечныйОстаток.ToString() });
+                //using (StreamWriter file = new StreamWriter("file.txt", true, Encoding.Default))
+                //{
+                //    file.WriteLine(respBd.КоличествоОстаток.ToString());
+                //}
+                listProd.Add(new Connect1CData { Article = respBd.СсылкаАртикул.ToString(), Storage = EnumHelpers.GetEnumMemberAttributeValue(storageType), Count = respBd.КоличествоОстаток.ToString() });
             }
+            Marshal.ReleaseComObject(respBd);
             return listProd;
         }
     }

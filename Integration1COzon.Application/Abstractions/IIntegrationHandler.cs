@@ -11,5 +11,6 @@ namespace Integration1COzon.Application.Abstractions
     {
         void Handle();
         List<IntegrationData> Handle(StorageType storageType);
+        void Update(StorageType storageType);
     }
 }

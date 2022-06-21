@@ -12,7 +12,8 @@ using RestSharp;
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.IO;
+using System.Text;
 
 namespace Integration1COzon.Application.Handler
 {
@@ -21,14 +22,7 @@ namespace Integration1COzon.Application.Handler
     /// </summary>
     public class IntegrationHandler : IIntegrationHandler
     {
-        private readonly string _nameServer = "";
-        private readonly string _nameDb = "";
-        private readonly string _user = "";
-        private readonly string _password = "";
-
-        private readonly string _apiKey = "";
-        private readonly string _apiClientId = "";
-        private readonly string _host = "";
+        
         private readonly ISingleMessageHandler<ProductStocksByWarehouseFbsResponse> _getProductStocksByWarehouse;
         private readonly ISingleMessageHandler<GetWarehouseListResponse> _getWarehouseListResponse;
         private readonly ISingleMessageHandler<GetProductInfoResopnse> _getProductInfoResopnse;
@@ -76,6 +70,11 @@ namespace Integration1COzon.Application.Handler
             }
         }
 
+        /// <summary>
+        /// Вывод списка товаров со склада
+        /// </summary>
+        /// <param name="storageType"></param>
+        /// <returns></returns>
         public List<IntegrationData> Handle(StorageType storageType)
         {
             _connection1c.Connect1C(_nameServer, _nameDb, _user, _password);
@@ -86,10 +85,14 @@ namespace Integration1COzon.Application.Handler
                 var respProductInfo = _getProductInfoResopnse.HandleSingle(SendTest(new GetProductInfoRequest(item.Article)));
                 if (respProductInfo.Result == null)
                 {
-                    list.Add(new IntegrationData { Article=item.Article,Storage=item.Storage,Count1C=item.Count});
+                    //list.Add(new IntegrationData { Article=item.Article,Storage=item.Storage,Count1C=item.Count});
                     continue;
                 }
                 var respProductStocks = _getProductStocksByWarehouse.HandleSingle(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
+                //using (StreamWriter file = new StreamWriter("file.txt", true, Encoding.Default))
+                //{
+                //    file.WriteLine(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
+                //}
                 foreach (var items in respProductStocks.Result)
                 {
                     try
@@ -99,22 +102,87 @@ namespace Integration1COzon.Application.Handler
                             list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count});
                             continue;
                         }
-                        if (items.WarehouseName.Contains("Полигонная"))
+                        if (storageType == StorageType.PgJeweler)
                         {
-                            list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count,Name= respProductInfo.Result.Name,CountOzon=items.Present });
-                            //try
-                            //{
-                            //    var updateProd = SendTest(new UpdateProductsStocksRequest(respProductInfo.Result.Offerid, items.ProductId, item.Count, items.WarehouseId));
-                            //    Thread.Sleep(800);
-                            //}
-                            //catch { }
-                            //Console.WriteLine(item.Article + " Название склада " + item.Storage + " Количество на складе " + item.Count + "  СкладОзон  " + items.Present);
+                            if (items.WarehouseName.Contains("Полигонная"))
+                            {
+                                list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count, Name = respProductInfo.Result.Name, CountOzon = items.Present });
+                            }
+                        }
+                        else
+                        {
+                            if (!items.WarehouseName.Contains("Полигонная"))
+                            {
+                                list.Add(new IntegrationData { Article = item.Article, Storage = item.Storage, Count1C = item.Count, Name = respProductInfo.Result.Name, CountOzon = items.Present });
+                            }
                         }
                     }
                     catch { }
                 }
             }
             return list;
+        }
+
+        /// <summary>
+        /// Обновление товаров на складе Озон
+        /// </summary>
+        /// <param name="storageType"></param>
+        public void Update(StorageType storageType)
+        {
+            _connection1c.Connect1C(_nameServer, _nameDb, _user, _password);
+            var listProd = _connection1c.Get(storageType);
+            foreach (var item in listProd)
+            {
+                var respProductInfo = _getProductInfoResopnse.HandleSingle(SendTest(new GetProductInfoRequest(item.Article)));
+                if (respProductInfo.Result == null)
+                {
+                    continue;
+                }
+                var respProductStocks = _getProductStocksByWarehouse.HandleSingle(SendTest(new ProductStocksByWarehouseFbsRequest(respProductInfo.Result.FbsSku)));
+                foreach (var items in respProductStocks.Result)
+                {
+                    try
+                    {
+                        if (respProductStocks.Result == null)
+                        {
+                            continue;
+                        }
+                        if (storageType == StorageType.PgJeweler)
+                        {
+                            if (items.WarehouseName.Contains("Полигонная"))
+                            {
+                                try
+                                {
+                                    var updateProd = SendTest(new UpdateProductsStocksRequest(respProductInfo.Result.Offerid, items.ProductId, item.Count, items.WarehouseId));
+                                    using (StreamWriter file = new StreamWriter("file.txt", true, Encoding.Default))
+                                    {
+                                        file.WriteLine(updateProd);
+                                    }
+                                    //Thread.Sleep(800);
+                                }
+                                catch { }
+                            }
+                        }
+                        else
+                        {
+                            if (!items.WarehouseName.Contains("Полигонная"))
+                            {
+                                try
+                                {
+                                    var updateProd = SendTest(new UpdateProductsStocksRequest(respProductInfo.Result.Offerid, items.ProductId, item.Count, items.WarehouseId));
+                                    using (StreamWriter file = new StreamWriter("file.txt", true, Encoding.Default))
+                                    {
+                                        file.WriteLine(updateProd);
+                                    }
+                                    //Thread.Sleep(800);
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
         }
 
         private string SendTest(AuthRequest payload)

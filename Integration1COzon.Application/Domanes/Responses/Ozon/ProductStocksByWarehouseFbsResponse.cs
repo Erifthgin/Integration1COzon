@@ -17,7 +17,7 @@ namespace Integration1COzon.Application.Domanes.Responses.Ozon
         [JsonProperty("product_id")]
         public int ProductId { get; set; }
         [JsonProperty("present")]
-        public int Present { get; set; }
+        public string Present { get; set; }
         [JsonProperty("reserved")]
         public int Reserved { get; set; }
         [JsonProperty("fbs_sku")]
