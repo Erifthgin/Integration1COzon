@@ -72,7 +72,6 @@ namespace Integration1COzon.WinForms
             this.dataGridView1.RowTemplate.Height = 25;
             this.dataGridView1.Size = new System.Drawing.Size(878, 396);
             this.dataGridView1.TabIndex = 2;
-            this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
             // comboBox1
             // 
@@ -87,7 +86,6 @@ namespace Integration1COzon.WinForms
             // 
             // button3
             // 
-            this.button3.Enabled = false;
             this.button3.Location = new System.Drawing.Point(436, 12);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(202, 23);

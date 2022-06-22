@@ -12,5 +12,6 @@ namespace Integration1COzon.Ozon
         public ISingleMessageHandler<GetWarehouseListResponse> CreateGetWarehouseListResponse() => new BaseJsonHandler<GetWarehouseListResponse>();
         public ISingleMessageHandler<GetProductInfoResopnse> CreateGetProductInfoResopnse() => new BaseJsonHandler<GetProductInfoResopnse>();
         public ISingleMessageHandler<ProductStocksByWarehouseFbsResponse> CreateProductStocksByWarehouseFbsResponse() => new BaseJsonHandler<ProductStocksByWarehouseFbsResponse>();
+        public ISingleMessageHandler<UpdateProductsStocksResponse> CreateUpdateProductsStocksResponse() => new BaseJsonHandler<UpdateProductsStocksResponse>();
     }
 }

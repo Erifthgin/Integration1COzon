@@ -8,6 +8,9 @@ namespace Integration1COzon.Application.Domanes.Object
         public string Name { get; set; }
         public string Count1C { get; set; }
         public string CountOzon { get; set; }
+        public string Offerid { get; set; }
+        public int ProductId { get; set; }
+        public string WarehouseId { get; set; }
     }
 }
 

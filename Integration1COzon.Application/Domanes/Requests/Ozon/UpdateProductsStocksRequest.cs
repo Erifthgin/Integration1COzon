@@ -34,9 +34,10 @@ namespace Integration1COzon.Application.Domanes.Requests.Ozon
                 arr.Add("product_id", ProductId.ToString());
                 arr.Add("stock", Count);
                 arr.Add("warehouse_id", WarehouseId);
-
+                List<object> arrList = new List<object>();
+                arrList.Add(arr);
                 var res = new Dictionary<string, object>();
-                res.Add("stocks", arr);
+                res.Add("stocks", arrList);
 
                 return res;
             }
